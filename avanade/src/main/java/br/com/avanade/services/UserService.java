@@ -4,17 +4,16 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import br.com.avanade.entities.User;
+import br.com.avanade.models.User;
 import br.com.avanade.repositories.UserRepository;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 
 @Service
+@AllArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     public User create(User user) {
         return userRepository.save(user);
@@ -25,12 +24,13 @@ public class UserService {
     }
 
     public User read(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 
+    @Transactional
     public User update(Long id, User user) {
-        User newUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        newUser.setName(user.getName());
+        User newUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        newUser.setNome(user.getNome());
         newUser.setAccount(user.getAccount());
         newUser.setCard(user.getCard());
         newUser.setFeatures(user.getFeatures());
@@ -38,7 +38,11 @@ public class UserService {
         return userRepository.save(newUser);
     }
 
+    @Transactional
     public void delete(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        user.getFeatures().clear();
+        user.getNews().clear();
         userRepository.deleteById(id);
     }
 }

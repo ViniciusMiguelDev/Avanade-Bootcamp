@@ -1,6 +1,7 @@
 package br.com.avanade.controllers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,9 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.avanade.controllers.dtos.UserDto;
+import br.com.avanade.controllers.dtos.FeatureDto;
+import br.com.avanade.models.Feature;
 import br.com.avanade.models.User;
-import br.com.avanade.services.UserService;
+import br.com.avanade.services.FeatureService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,83 +26,84 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/features")
 @AllArgsConstructor
-public class UserController {
-
-        private final UserService userService;
+public class FeatureController {
+        private final FeatureService featureService;
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Cria um novo usuário")
+        @Operation(summary = "Cria uma feature para um usuário")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuário criado com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Feature criado com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
-        @PostMapping
-        public ResponseEntity<UserDto> create(@RequestBody @Valid UserDto userdto) {
-                if (userdto.nome() == null) {
-                        throw new IllegalArgumentException("Nome não pode ser nulo.");
-                }
-                User user = new User();
-                user.setNome(userdto.nome());
-                userService.create(user);
-                return ResponseEntity.ok(userdto);
-
+        @PostMapping("/{idUser}")
+        public ResponseEntity<FeatureDto> Create(@PathVariable Long idUser, @RequestBody @Valid Feature feature) {
+                featureService.create(idUser, feature);
+                FeatureDto dto = new FeatureDto(feature.getId(), feature.getIcon(), feature.getDescription());
+                return ResponseEntity.ok(dto);
         }
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Lista todos os usuários")
+        @Operation(summary = "Lista todas as Features")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Features listadas com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
         @GetMapping
-        public ResponseEntity<List<User>> ReadAll() {
-                return ResponseEntity.ok(userService.readAll());
+        public ResponseEntity<List<FeatureDto>> ReadAll() {
+                List<FeatureDto> dtos = featureService.readAll().stream().map(
+                                feature -> new FeatureDto(feature.getId(), feature.getIcon(), feature.getDescription()))
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(dtos);
         }
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Encontra um usuário pelo id")
+        @Operation(summary = "Encontra uma Feature pelo id")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Feature encontrada com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
         @GetMapping("/{id}")
-        public ResponseEntity<User> Read(@PathVariable Long id) {
-                return ResponseEntity.ok(userService.read(id));
+        public ResponseEntity<FeatureDto> Read(@PathVariable Long id) {
+                Feature feature = featureService.read(id);
+                FeatureDto dto = new FeatureDto(feature.getId(), feature.getIcon(), feature.getDescription());
+                return ResponseEntity.ok(dto);
         }
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Atualiza um usuário pelo id")
+        @Operation(summary = "Atualiza uma feature pelo id")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Feature atualizada com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
         @PutMapping("/{id}")
-        public ResponseEntity<User> Update(@PathVariable Long id, @RequestBody @Valid User user) {
-                User newUser = userService.update(id, user);
-                return ResponseEntity.ok(newUser);
+        public ResponseEntity<FeatureDto> Update(@PathVariable Long idUser, @PathVariable Long idFeature,
+                        @RequestBody @Valid Feature feature) {
+                Feature newFeature = featureService.update(idUser, idFeature, feature);
+                FeatureDto dto = new FeatureDto(newFeature.getId(), newFeature.getIcon(), newFeature.getDescription());
+                return ResponseEntity.ok(dto);
         }
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Deleta um usuário pelo id")
+        @Operation(summary = "Deleta uma feature pelo id")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuário deletado com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Feature deletado com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
         @DeleteMapping("/{id}")
         public ResponseEntity<?> Delete(@PathVariable Long id) {
-                userService.delete(id);
+                featureService.delete(id);
                 return ResponseEntity.noContent().build();
         }
 }

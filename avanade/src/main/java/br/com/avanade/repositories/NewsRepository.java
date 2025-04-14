@@ -3,9 +3,9 @@ package br.com.avanade.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import br.com.avanade.models.User;
+import br.com.avanade.models.News;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface NewsRepository extends JpaRepository<News, Long> {
 
 }

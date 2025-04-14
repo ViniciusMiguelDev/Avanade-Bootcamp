@@ -1,6 +1,7 @@
 package br.com.avanade.controllers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,9 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.avanade.controllers.dtos.UserDto;
+import br.com.avanade.controllers.dtos.CardDto;
+import br.com.avanade.models.Card;
 import br.com.avanade.models.User;
-import br.com.avanade.services.UserService;
+import br.com.avanade.services.CardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,83 +26,85 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/cards")
 @AllArgsConstructor
-public class UserController {
-
-        private final UserService userService;
+public class CardController {
+        private final CardService cardService;
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Cria um novo usuário")
+        @Operation(summary = "Cria um card para um usuário")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuário criado com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Card criado com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
-        @PostMapping
-        public ResponseEntity<UserDto> create(@RequestBody @Valid UserDto userdto) {
-                if (userdto.nome() == null) {
-                        throw new IllegalArgumentException("Nome não pode ser nulo.");
-                }
-                User user = new User();
-                user.setNome(userdto.nome());
-                userService.create(user);
-                return ResponseEntity.ok(userdto);
-
+        @PostMapping("/{idUser}")
+        public ResponseEntity<CardDto> Create(@PathVariable Long idUser, @RequestBody @Valid Card card) {
+                cardService.create(idUser, card);
+                CardDto dto = new CardDto(card.getId(), card.getNumber(), card.getLimit());
+                return ResponseEntity.ok(dto);
         }
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Lista todos os usuários")
+        @Operation(summary = "Lista todas os cards")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Cards listados com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
         @GetMapping
-        public ResponseEntity<List<User>> ReadAll() {
-                return ResponseEntity.ok(userService.readAll());
+        public ResponseEntity<List<CardDto>> ReadAll() {
+                List<CardDto> dtos = cardService.readAll().stream()
+                                .map(card -> new CardDto(card.getId(), card.getNumber(), card.getLimit()))
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(dtos);
         }
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Encontra um usuário pelo id")
+        @Operation(summary = "Encontra um card pelo id")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Card encontrado com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
         @GetMapping("/{id}")
-        public ResponseEntity<User> Read(@PathVariable Long id) {
-                return ResponseEntity.ok(userService.read(id));
+        public ResponseEntity<CardDto> Read(@PathVariable Long id) {
+                Card card = cardService.read(id);
+                CardDto dto = new CardDto(card.getId(), card.getNumber(), card.getLimit());
+                return ResponseEntity.ok(dto);
         }
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Atualiza um usuário pelo id")
+        @Operation(summary = "Atualiza um Card pelo id")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Card atualizada com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
         @PutMapping("/{id}")
-        public ResponseEntity<User> Update(@PathVariable Long id, @RequestBody @Valid User user) {
-                User newUser = userService.update(id, user);
-                return ResponseEntity.ok(newUser);
+        public ResponseEntity<CardDto> Update(@PathVariable Long idUser, @PathVariable Long idCard,
+                        @RequestBody @Valid Card card) {
+                Card carta = cardService.update(idUser, idCard, card);
+                CardDto dto = new CardDto(carta.getId(), carta.getNumber(), carta.getLimit());
+                return ResponseEntity.ok(dto);
         }
 
         // _________________________________________________________________________________________________________________________//
 
-        @Operation(summary = "Deleta um usuário pelo id")
+        @Operation(summary = "Deleta um Card pelo id")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Usuário deletado com sucesso", content = {
+                        @ApiResponse(responseCode = "200", description = "Card deletado com sucesso", content = {
                                         @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
                         @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content)
         })
         @DeleteMapping("/{id}")
         public ResponseEntity<?> Delete(@PathVariable Long id) {
-                userService.delete(id);
+                cardService.delete(id);
                 return ResponseEntity.noContent().build();
+
         }
 }

@@ -1,36 +1,38 @@
-package br.com.avanade.entities;
+package br.com.avanade.models;
 
 import java.math.BigDecimal;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "tb_accounts")
+@Entity
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class Account {
-
+@NoArgsConstructor
+@Table(name = "CARDS")
+public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @JsonIgnore
     private Long id;
 
-    @Column(name = "number", columnDefinition = "varchar(13)", nullable = false)
+    @Column(name = "number", columnDefinition = "varchar(16)", nullable = false)
     private String number;
 
-    @Column(name = "agency", columnDefinition = "varchar(5)", nullable = false)
-    private String agency;
-
     @Column(name = "balance", precision = 20, scale = 2)
-    private BigDecimal balance;
-
-    @Column(name = "limit", precision = 20, scale = 2)
     private BigDecimal limit;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "card")
+    private User user;
 }
